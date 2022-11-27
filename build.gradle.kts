@@ -91,6 +91,7 @@ configure<SourceSetContainer> {
 repositories {
     mavenLocal()
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
@@ -108,7 +109,7 @@ dependencies {
     api("com.squareup.okhttp3:okhttp:4.9.3")
 
     //Opus library support
-    api("club.minnced:opus-java:1.1.1")
+    api("com.github.lostromb.concentus:Concentus:fdf276ed6b")
 
     //Collections Utility
     api("org.apache.commons:commons-collections4:4.4")
@@ -116,7 +117,7 @@ dependencies {
     //we use this only together with opus-java
     // if that dependency is excluded it also doesn't need jna anymore
     // since jna is a transitive runtime dependency of opus-java we don't include it explicitly as dependency
-    compileOnly("net.java.dev.jna:jna:4.4.0")
+    //compileOnly("net.java.dev.jna:jna:4.4.0")
 
     /* Internal dependencies */
 

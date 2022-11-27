@@ -18,7 +18,6 @@ package net.dv8tion.jda.internal.audio;
 
 import com.iwebpp.crypto.TweetNaclFast;
 import com.neovisionaries.ws.client.WebSocket;
-import com.sun.jna.ptr.PointerByReference;
 import gnu.trove.map.TIntLongMap;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntLongHashMap;
@@ -37,8 +36,10 @@ import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.managers.AudioManagerImpl;
 import net.dv8tion.jda.internal.utils.IOUtil;
 import net.dv8tion.jda.internal.utils.JDALogger;
+import org.concentus.OpusApplication;
+import org.concentus.OpusEncoder;
+import org.concentus.OpusException;
 import org.slf4j.Logger;
-import tomp2p.opuswrapper.Opus;
 
 import javax.annotation.Nonnull;
 import java.net.*;
@@ -70,7 +71,7 @@ public class AudioConnection
     private final JDAImpl api;
 
     private AudioChannel channel;
-    private PointerByReference opusEncoder;
+    private OpusEncoder opusEncoder;
     private ScheduledExecutorService combinedAudioExecutor;
     private IAudioSendSystem sendSystem;
     private Thread receiveThread;
@@ -189,7 +190,6 @@ public class AudioConnection
         }
         if (opusEncoder != null)
         {
-            Opus.INSTANCE.opus_encoder_destroy(opusEncoder);
             opusEncoder = null;
         }
 
@@ -307,7 +307,6 @@ public class AudioConnection
 
             if (opusEncoder != null)
             {
-                Opus.INSTANCE.opus_encoder_destroy(opusEncoder);
                 opusEncoder = null;
             }
         }
@@ -567,7 +566,6 @@ public class AudioConnection
     private ByteBuffer encodeToOpus(ByteBuffer rawAudio)
     {
         ShortBuffer nonEncodedBuffer = ShortBuffer.allocate(rawAudio.remaining() / 2);
-        ByteBuffer encoded = ByteBuffer.allocate(4096);
         for (int i = rawAudio.position(); i < rawAudio.limit(); i += 2)
         {
             int firstByte =  (0x000000FF & rawAudio.get(i));      //Promotes to int and handles the fact that it was unsigned.
@@ -580,15 +578,18 @@ public class AudioConnection
         }
         ((Buffer) nonEncodedBuffer).flip();
 
-        int result = Opus.INSTANCE.opus_encode(opusEncoder, nonEncodedBuffer, OpusPacket.OPUS_FRAME_SIZE, encoded, encoded.capacity());
-        if (result <= 0)
+        byte[] encoded = new byte[4096];
+        try
         {
-            LOG.error("Received error code from opus_encode(...): {}", result);
-            return null;
+            opusEncoder.encode(nonEncodedBuffer.array(), 0, OpusPacket.OPUS_FRAME_SIZE, encoded, 0, 4096);
+        }
+        catch (OpusException e)
+        {
+            // this error handling is just too good
+            throw new RuntimeException(e);
         }
 
-        ((Buffer) encoded).position(0).limit(result);
-        return encoded;
+        return ByteBuffer.wrap(encoded);
     }
 
     private void setSpeaking(int raw)
@@ -748,12 +749,14 @@ public class AudioConnection
                     printedError = true;
                     return null;
                 }
-                IntBuffer error = IntBuffer.allocate(1);
-                opusEncoder = Opus.INSTANCE.opus_encoder_create(OpusPacket.OPUS_SAMPLE_RATE, OpusPacket.OPUS_CHANNEL_COUNT, Opus.OPUS_APPLICATION_AUDIO, error);
-                if (error.get() != Opus.OPUS_OK && opusEncoder == null)
+                try
                 {
-                    LOG.error("Received error status from opus_encoder_create(...): {}", error.get());
-                    return null;
+                    opusEncoder = new OpusEncoder(OpusPacket.OPUS_SAMPLE_RATE, OpusPacket.OPUS_CHANNEL_COUNT, OpusApplication.OPUS_APPLICATION_AUDIO);
+                }
+                catch (OpusException e)
+                {
+                    // 100% flawless error handling
+                    throw new RuntimeException(e);
                 }
             }
             return encodeToOpus(rawAudio);
