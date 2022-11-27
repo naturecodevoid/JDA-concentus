@@ -60,12 +60,13 @@ public class Decoder
 
     public short[] decodeFromOpus(AudioPacket decryptedPacket)
     {
+        int result;
         short[] decoded = new short[4096];
         if (decryptedPacket == null)    //Flag for packet-loss
         {
             try
             {
-                opusDecoder.decode(null, 0, 0, decoded, 0, OpusPacket.OPUS_FRAME_SIZE, false);
+                result = opusDecoder.decode(null, 0, 0, decoded, 0, OpusPacket.OPUS_FRAME_SIZE, false);
             }
             catch (OpusException e)
             {
@@ -88,7 +89,7 @@ public class Decoder
             System.arraycopy(data, offset, buf, 0, length);
             try
             {
-                opusDecoder.decode(buf, 0, buf.length, decoded, 0, OpusPacket.OPUS_FRAME_SIZE, false);
+                result = opusDecoder.decode(buf, 0, buf.length, decoded, 0, OpusPacket.OPUS_FRAME_SIZE, false);
             }
             catch (OpusException e)
             {
@@ -98,7 +99,9 @@ public class Decoder
 
         // we already have better error handling
 
-        return decoded;
+        short[] audio = new short[result];
+        System.arraycopy(decoded, 0, audio, 0, result);
+        return audio;
     }
 
     protected synchronized void close()
