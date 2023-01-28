@@ -44,6 +44,7 @@ import net.dv8tion.jda.api.interactions.commands.privileges.IntegrationPrivilege
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.managers.GuildManager;
 import net.dv8tion.jda.api.managers.GuildStickerManager;
+import net.dv8tion.jda.api.managers.GuildWelcomeScreenManager;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.*;
@@ -2377,6 +2378,26 @@ public interface Guild extends IGuildChannelContainer, ISnowflake
     RestAction<List<Webhook>> retrieveWebhooks();
 
     /**
+     * Retrieves the {@link GuildWelcomeScreen welcome screen} for this Guild.
+     * <br>The welcome screen is shown to all members after joining the Guild.
+     *
+     * <p>Possible {@link net.dv8tion.jda.api.requests.ErrorResponse ErrorResponses} include:
+     * <ul>
+     *     <li>{@link net.dv8tion.jda.api.requests.ErrorResponse#UNKNOWN_GUILD_WELCOME_SCREEN Unknown Guild Welcome Screen}
+     *     <br>The guild has no welcome screen</li>
+     *     <li>{@link net.dv8tion.jda.api.requests.ErrorResponse#MISSING_PERMISSIONS Missing Permissions}
+     *     <br>The guild's welcome screen is disabled
+     *     and the currently logged in account doesn't have the {@link net.dv8tion.jda.api.Permission#MANAGE_SERVER MANAGE_SERVER} permission</li>
+     * </ul>
+     *
+     * @return {@link RestAction} - Type: {@link GuildWelcomeScreen}
+     *         <br>The welcome screen for this Guild.
+     */
+    @Nonnull
+    @CheckReturnValue
+    RestAction<GuildWelcomeScreen> retrieveWelcomeScreen();
+
+    /**
      * A list containing the {@link net.dv8tion.jda.api.entities.GuildVoiceState GuildVoiceState} of every {@link net.dv8tion.jda.api.entities.Member Member}
      * in this {@link net.dv8tion.jda.api.entities.Guild Guild}.
      * <br>This will never return an empty list because if it were empty, that would imply that there are no
@@ -4561,7 +4582,7 @@ public interface Guild extends IGuildChannelContainer, ISnowflake
      * @param  description
      *         The sticker description (2-100 characters, or empty)
      * @param  file
-     *         The sticker file containing the asset (png/apng/lottie) with valid file extension (png or json)
+     *         The sticker file containing the asset (png/apng/gif/lottie) with valid file extension (png, gif, or json)
      * @param  tags
      *         The tags to use for auto-suggestions (Up to 200 characters in total)
      *
@@ -4571,7 +4592,7 @@ public interface Guild extends IGuildChannelContainer, ISnowflake
      *         <ul>
      *             <li>If the name is not between 2 and 30 characters long</li>
      *             <li>If the description is more than 100 characters long or exactly 1 character long</li>
-     *             <li>If the asset file is null or of an invalid format (must be PNG or LOTTIE)</li>
+     *             <li>If the asset file is null or of an invalid format (must be PNG, GIF, or LOTTIE)</li>
      *             <li>If anything is {@code null}</li>
      *         </ul>
      *
@@ -4597,7 +4618,7 @@ public interface Guild extends IGuildChannelContainer, ISnowflake
      * @param  description
      *         The sticker description (2-100 characters, or empty)
      * @param  file
-     *         The sticker file containing the asset (png/apng/lottie) with valid file extension (png or json)
+     *         The sticker file containing the asset (png/apng/gif/lottie) with valid file extension (png, gif, or json)
      * @param  tag
      *         The sticker tag used for suggestions (emoji or tag words)
      * @param  tags
@@ -4609,7 +4630,7 @@ public interface Guild extends IGuildChannelContainer, ISnowflake
      *         <ul>
      *             <li>If the name is not between 2 and 30 characters long</li>
      *             <li>If the description is more than 100 characters long or exactly 1 character long</li>
-     *             <li>If the asset file is null or of an invalid format (must be PNG or LOTTIE)</li>
+     *             <li>If the asset file is null or of an invalid format (must be PNG, GIF, or LOTTIE)</li>
      *             <li>If anything is {@code null}</li>
      *         </ul>
      *
@@ -4938,6 +4959,20 @@ public interface Guild extends IGuildChannelContainer, ISnowflake
     @Nonnull
     @CheckReturnValue
     RoleOrderAction modifyRolePositions(boolean useAscendingOrder);
+
+    /**
+     * The {@link GuildWelcomeScreenManager Manager} for this guild's welcome screen, used to modify
+     * properties of the welcome screen like if the welcome screen is enabled, the description and welcome channels.
+     * <br>You modify multiple fields in one request by chaining setters before calling {@link net.dv8tion.jda.api.requests.RestAction#queue() RestAction.queue()}.
+     *
+     * @throws net.dv8tion.jda.api.exceptions.InsufficientPermissionException
+     *         If the currently logged in account does not have {@link net.dv8tion.jda.api.Permission#MANAGE_SERVER Permission.MANAGE_SERVER}
+     *
+     * @return The GuildWelcomeScreenManager for this guild's welcome screen
+     */
+    @Nonnull
+    @CheckReturnValue
+    GuildWelcomeScreenManager modifyWelcomeScreen();
 
     //////////////////////////
 

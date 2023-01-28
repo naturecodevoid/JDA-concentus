@@ -1325,8 +1325,7 @@ public class EntityBuilder
     {
         ThreadMemberImpl threadMember = new ThreadMemberImpl(member, threadChannel);
         threadMember
-            .setJoinedTimestamp(Helpers.toTimestamp(json.getString("join_timestamp")))
-            .setFlags(json.getInt("flags"));
+            .setJoinedTimestamp(Helpers.toTimestamp(json.getString("join_timestamp")));
 
         return threadMember;
     }
@@ -1634,6 +1633,7 @@ public class EntityBuilder
 
         final String content = jsonObject.getString("content", "");
         final boolean fromWebhook = jsonObject.hasKey("webhook_id");
+        final long applicationId = jsonObject.getUnsignedLong("application_id", 0);
         final boolean pinned = jsonObject.getBoolean("pinned");
         final boolean tts = jsonObject.getBoolean("tts");
         final boolean mentionsEveryone = jsonObject.getBoolean("mention_everyone");
@@ -1753,12 +1753,12 @@ public class EntityBuilder
 
         if (!type.isSystem())
         {
-            return new ReceivedMessage(id, channel, type, messageReference, fromWebhook, tts, pinned,
+            return new ReceivedMessage(id, channel, type, messageReference, fromWebhook, applicationId, tts, pinned,
                     content, nonce, user, member, activity, editTime, mentions, reactions, attachments, embeds, stickers, components, flags, messageInteraction, startedThread);
         }
         else
         {
-            return new SystemMessage(id, channel, type, messageReference, fromWebhook, tts, pinned,
+            return new SystemMessage(id, channel, type, messageReference, fromWebhook, applicationId, tts, pinned,
                     content, nonce, user, member, activity, editTime, mentions, reactions, attachments, embeds, stickers, flags, startedThread);
         }
     }
@@ -2162,7 +2162,11 @@ public class EntityBuilder
             else
                 guildFeatures = Collections.unmodifiableSet(StreamSupport.stream(guildObject.getArray("features").spliterator(), false).map(String::valueOf).collect(Collectors.toSet()));
 
-            guild = new InviteImpl.GuildImpl(guildId, guildIconId, guildName, guildSplashId, guildVerificationLevel, presenceCount, memberCount, guildFeatures);
+            final GuildWelcomeScreen welcomeScreen = guildObject.isNull("welcome_screen")
+                    ? null
+                    : createWelcomeScreen(null, guildObject.getObject("welcome_screen"));
+
+            guild = new InviteImpl.GuildImpl(guildId, guildIconId, guildName, guildSplashId, guildVerificationLevel, presenceCount, memberCount, guildFeatures, welcomeScreen);
 
             final String channelName = channelObject.getString("name");
             final long channelId = channelObject.getLong("id");
@@ -2231,6 +2235,27 @@ public class EntityBuilder
         return new InviteImpl(getJDA(), code, expanded, inviter,
                               maxAge, maxUses, temporary, timeCreated,
                               uses, channel, guild, group, target, type);
+    }
+
+    public GuildWelcomeScreen createWelcomeScreen(Guild guild, DataObject object)
+    {
+        final DataArray welcomeChannelsArray = object.getArray("welcome_channels");
+        final List<GuildWelcomeScreen.Channel> welcomeChannels = new ArrayList<>(welcomeChannelsArray.length());
+        for (int i = 0; i < welcomeChannelsArray.length(); i++)
+        {
+            final DataObject welcomeChannelObj = welcomeChannelsArray.getObject(i);
+            EmojiUnion emoji = null;
+            if (!welcomeChannelObj.isNull("emoji_id") || !welcomeChannelObj.isNull("emoji_name"))
+                emoji = createEmoji(welcomeChannelObj, "emoji_name", "emoji_id");
+
+            welcomeChannels.add(new GuildWelcomeScreenImpl.ChannelImpl(
+                    guild,
+                    welcomeChannelObj.getLong("channel_id"),
+                    welcomeChannelObj.getString("description"),
+                    emoji)
+            );
+        }
+        return new GuildWelcomeScreenImpl(guild, object.getString("description", null), Collections.unmodifiableList(welcomeChannels));
     }
 
     public Template createTemplate(DataObject object)
@@ -2367,6 +2392,7 @@ public class EntityBuilder
     public AuditLogEntry createAuditLogEntry(GuildImpl guild, DataObject entryJson, DataObject userJson, DataObject webhookJson)
     {
         final long targetId = entryJson.getLong("target_id", 0);
+        final long userId = entryJson.getLong("user_id", 0);
         final long id = entryJson.getLong("id");
         final int typeKey = entryJson.getInt("action_type");
         final DataArray changes = entryJson.isNull("changes") ? null : entryJson.getArray("changes");
@@ -2397,7 +2423,7 @@ public class EntityBuilder
         CaseInsensitiveMap<String, Object> optionMap = options != null
                 ? new CaseInsensitiveMap<>(options.toMap()) : null;
 
-        return new AuditLogEntry(type, typeKey, id, targetId, guild, user, webhook, reason, changeMap, optionMap);
+        return new AuditLogEntry(type, typeKey, id, userId, targetId, guild, user, webhook, reason, changeMap, optionMap);
     }
 
     public AuditLogChange createAuditLogChange(DataObject change)

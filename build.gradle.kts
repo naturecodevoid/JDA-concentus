@@ -40,7 +40,7 @@ plugins {
 }
 
 val javaVersion = JavaVersion.current()
-val versionObj = Version(major = "5", minor = "0", revision = "0", classifier = "alpha.22")
+val versionObj = Version(major = "5", minor = "0", revision = "0", classifier = "beta.3")
 val isCI = System.getProperty("BUILD_NUMBER") != null // jenkins
         || System.getenv("BUILD_NUMBER") != null
         || System.getProperty("GIT_COMMIT") != null // jitpack
@@ -106,7 +106,7 @@ dependencies {
 
     //Web Connection Support
     api("com.neovisionaries:nv-websocket-client:2.14")
-    api("com.squareup.okhttp3:okhttp:4.9.3")
+    api("com.squareup.okhttp3:okhttp:4.10.0")
 
     //Opus library support
     api("com.github.lostromb.concentus:Concentus:fdf276ed6b")
@@ -124,8 +124,8 @@ dependencies {
     //General Utility
     implementation("net.sf.trove4j:trove4j:3.0.3")
     // Match the minor version of lavaplayers jackson dependency
-    implementation("com.fasterxml.jackson.core:jackson-core:2.13.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.2.2")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.14.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.14.1")
 
     //Sets the dependencies for the examples
     configurations["examplesImplementation"].withDependencies {
