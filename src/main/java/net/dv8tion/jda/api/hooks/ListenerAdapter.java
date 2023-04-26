@@ -206,6 +206,7 @@ public abstract class ListenerAdapter implements EventListener
     public void onChannelUpdateDefaultThreadSlowmode(@Nonnull ChannelUpdateDefaultThreadSlowmodeEvent event) {}
     public void onChannelUpdateDefaultReaction(@Nonnull ChannelUpdateDefaultReactionEvent event) {}
 //    public void onChannelUpdateDefaultSortOrder(@Nonnull ChannelUpdateDefaultSortOrderEvent event) {}
+    public void onChannelUpdateDefaultLayout(@Nonnull ChannelUpdateDefaultLayoutEvent event) {}
     public void onChannelUpdateTopic(@Nonnull ChannelUpdateTopicEvent event) {}
     public void onChannelUpdateType(@Nonnull ChannelUpdateTypeEvent event) {}
     public void onChannelUpdateUserLimit(@Nonnull ChannelUpdateUserLimitEvent event) {}
@@ -298,6 +299,7 @@ public abstract class ListenerAdapter implements EventListener
     public void onGuildMemberUpdateAvatar(@Nonnull GuildMemberUpdateAvatarEvent event) {}
     public void onGuildMemberUpdateBoostTime(@Nonnull GuildMemberUpdateBoostTimeEvent event) {}
     public void onGuildMemberUpdatePending(@Nonnull GuildMemberUpdatePendingEvent event) {}
+    public void onGuildMemberUpdateFlags(@Nonnull GuildMemberUpdateFlagsEvent event) {}
     public void onGuildMemberUpdateTimeOut(@Nonnull GuildMemberUpdateTimeOutEvent event) {}
 
     //Guild Voice Events
