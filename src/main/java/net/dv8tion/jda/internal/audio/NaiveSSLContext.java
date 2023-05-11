@@ -1,4 +1,5 @@
 // https://gist.github.com/TakahikoKawasaki/d07de2218b4b81bf65ac
+package net.dv8tion.jda.internal.audio;
 /*
  * Copyright (C) 2015 Neo Visionaries Inc.
  *
