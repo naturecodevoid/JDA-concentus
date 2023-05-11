@@ -127,8 +127,7 @@ class AudioWebSocket extends WebSocketAdapter
         {
             WebSocketFactory socketFactory = new WebSocketFactory(getJDA().getWebSocketFactory());
             try {
-                String ssl = System.getProperty("jda.disablessl");
-                if (ssl.length() > 0) {
+                if (System.getProperty("jda.disablessl").length() > 0) {
                     LOG.info("Disabling SSL");
                     javax.net.ssl.SSLContext context = NaiveSSLContext.getInstance("TLS");
                     socketFactory.setSSLContext(context);
