@@ -126,6 +126,7 @@ class AudioWebSocket extends WebSocketAdapter
         try
         {
             WebSocketFactory socketFactory = new WebSocketFactory(getJDA().getWebSocketFactory());
+            socketFactory.setVerifyHostname(false); // bandaid fix for HOSTNAME_UNVERIFIED
             IOUtil.setServerName(socketFactory, wssEndpoint);
             if (socketFactory.getSocketTimeout() > 0)
                 socketFactory.setSocketTimeout(Math.max(1000, socketFactory.getSocketTimeout()));
