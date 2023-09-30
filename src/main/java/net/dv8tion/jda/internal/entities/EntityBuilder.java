@@ -59,6 +59,7 @@ import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.*;
 import net.dv8tion.jda.internal.entities.channel.mixin.attribute.IPermissionContainerMixin;
+import net.dv8tion.jda.internal.entities.channel.mixin.attribute.IPostContainerMixin;
 import net.dv8tion.jda.internal.entities.channel.mixin.middleman.AudioChannelMixin;
 import net.dv8tion.jda.internal.entities.emoji.CustomEmojiImpl;
 import net.dv8tion.jda.internal.entities.emoji.RichCustomEmojiImpl;
@@ -104,7 +105,6 @@ public class EntityBuilder
         tmp.add("flags");
         tmp.add("party");
         tmp.add("session_id");
-        tmp.add("state");
         tmp.add("sync_id");
         richGameFields = Collections.unmodifiableSet(tmp);
     }
@@ -144,7 +144,7 @@ public class EntityBuilder
                 .setMfaEnabled(self.getBoolean("mfa_enabled"))
                 .setName(self.getString("username"))
                 .setGlobalName(self.getString("global_name", null))
-                .setDiscriminator(self.getString("discriminator", "0"))
+                .setDiscriminator(Short.parseShort(self.getString("discriminator", "0")))
                 .setAvatarId(self.getString("avatar", null))
                 .setBot(self.getBoolean("bot"))
                 .setSystem(false);
@@ -399,31 +399,28 @@ public class EntityBuilder
         return guildObj;
     }
 
-    private void createGuildChannel(GuildImpl guildObj, DataObject channelData)
+    public GuildChannel createGuildChannel(GuildImpl guildObj, DataObject channelData)
     {
         final ChannelType channelType = ChannelType.fromId(channelData.getInt("type"));
         switch (channelType)
         {
         case TEXT:
-            createTextChannel(guildObj, channelData, guildObj.getIdLong());
-            break;
+            return createTextChannel(guildObj, channelData, guildObj.getIdLong());
         case NEWS:
-            createNewsChannel(guildObj, channelData, guildObj.getIdLong());
-            break;
+            return createNewsChannel(guildObj, channelData, guildObj.getIdLong());
         case STAGE:
-            createStageChannel(guildObj, channelData, guildObj.getIdLong());
-            break;
+            return createStageChannel(guildObj, channelData, guildObj.getIdLong());
         case VOICE:
-            createVoiceChannel(guildObj, channelData, guildObj.getIdLong());
-            break;
+            return createVoiceChannel(guildObj, channelData, guildObj.getIdLong());
         case CATEGORY:
-            createCategory(guildObj, channelData, guildObj.getIdLong());
-            break;
+            return createCategory(guildObj, channelData, guildObj.getIdLong());
         case FORUM:
-            createForumChannel(guildObj, channelData, guildObj.getIdLong());
-            break;
+            return createForumChannel(guildObj, channelData, guildObj.getIdLong());
+        case MEDIA:
+            return createMediaChannel(guildObj, channelData, guildObj.getIdLong());
         default:
             LOG.debug("Cannot create channel for type " + channelData.getInt("type"));
+            return null;
         }
     }
 
@@ -453,7 +450,7 @@ public class EntityBuilder
             // Initial creation
             userObj.setName(user.getString("username"))
                    .setGlobalName(user.getString("global_name", null))
-                   .setDiscriminator(user.getString("discriminator", "0"))
+                   .setDiscriminator(Short.parseShort(user.getString("discriminator", "0")))
                    .setAvatarId(user.getString("avatar", null))
                    .setBot(user.getBoolean("bot"))
                    .setSystem(user.getBoolean("system"))
@@ -475,8 +472,8 @@ public class EntityBuilder
         String newName = user.getString("username");
         String oldGlobalName = userObj.getGlobalName();
         String newGlobalName = user.getString("global_name", null);
-        String oldDiscriminator = userObj.getDiscriminator();
-        String newDiscriminator = user.getString("discriminator", "0");
+        short oldDiscriminator = userObj.getDiscriminatorInt();
+        short newDiscriminator = Short.parseShort(user.getString("discriminator", "0"));
         String oldAvatar = userObj.getAvatarId();
         String newAvatar = user.getString("avatar", null);
         int oldFlags = userObj.getFlagsRaw();
@@ -502,13 +499,14 @@ public class EntityBuilder
                     userObj, oldGlobalName));
         }
 
-        if (!oldDiscriminator.equals(newDiscriminator))
+        if (oldDiscriminator != newDiscriminator)
         {
+            String oldDiscrimString = userObj.getDiscriminator();
             userObj.setDiscriminator(newDiscriminator);
             jda.handleEvent(
                 new UserUpdateDiscriminatorEvent(
                     jda, responseNumber,
-                    userObj, oldDiscriminator));
+                    userObj, oldDiscrimString));
         }
 
         if (!Objects.equals(oldAvatar, newAvatar))
@@ -548,7 +546,6 @@ public class EntityBuilder
             if (user.getMutualGuilds().isEmpty())
             {
                 // we no longer share any guilds/channels with this user so remove it from cache
-                user.setFake(true);
                 getJDA().getUsersView().remove(user.getIdLong());
             }
 
@@ -931,15 +928,17 @@ public class EntityBuilder
 
         if (type == Activity.ActivityType.CUSTOM_STATUS)
         {
-            if (gameJson.hasKey("state") && name.equalsIgnoreCase("Custom Status"))
+            if (gameJson.hasKey("state"))
             {
                 name = gameJson.getString("state", "");
                 gameJson = gameJson.remove("state");
             }
         }
 
+        String state = gameJson.isNull("state") ? null : String.valueOf(gameJson.get("state"));
+
         if (!CollectionUtils.containsAny(gameJson.keys(), richGameFields))
-            return new ActivityImpl(name, url, type, timestamps, emoji);
+            return new ActivityImpl(name, state, url, type, timestamps, emoji);
 
         // data for spotify
         long id = gameJson.getLong("application_id", 0L);
@@ -947,7 +946,6 @@ public class EntityBuilder
         String syncId = gameJson.getString("sync_id", null);
         int flags = gameJson.getInt("flags", 0);
         String details = gameJson.isNull("details") ? null : String.valueOf(gameJson.get("details"));
-        String state = gameJson.isNull("state") ? null : String.valueOf(gameJson.get("state"));
 
         RichPresence.Party party = null;
         if (!gameJson.isNull("party"))
@@ -1412,7 +1410,7 @@ public class EntityBuilder
                 .setParentCategory(json.getLong("parent_id", 0))
                 .setFlags(json.getInt("flags", 0))
                 .setDefaultReaction(json.optObject("default_reaction_emoji").orElse(null))
-//                .setDefaultSortOrder(json.getInt("default_sort_order", -1))
+                .setDefaultSortOrder(json.getInt("default_sort_order", -1))
                 .setDefaultLayout(json.getInt("default_forum_layout", -1))
                 .setName(json.getString("name"))
                 .setTopic(json.getString("topic", null))
@@ -1427,7 +1425,59 @@ public class EntityBuilder
         return channel;
     }
 
-    public ForumTagImpl createForumTag(ForumChannelImpl channel, DataObject json, int index)
+    public MediaChannel createMediaChannel(DataObject json, long guildId)
+    {
+        return createMediaChannel(null, json, guildId);
+    }
+
+    public MediaChannel createMediaChannel(GuildImpl guild, DataObject json, long guildId)
+    {
+        boolean playbackCache = false;
+        final long id = json.getLong("id");
+        MediaChannelImpl channel = (MediaChannelImpl) getJDA().getMediaChannelsView().get(id);
+        if (channel == null)
+        {
+            if (guild == null)
+                guild = (GuildImpl) getJDA().getGuildsView().get(guildId);
+            SnowflakeCacheViewImpl<MediaChannel>
+                    guildView = guild.getMediaChannelsView(),
+                    globalView = getJDA().getMediaChannelsView();
+            try (
+                    UnlockHook vlock = guildView.writeLock();
+                    UnlockHook jlock = globalView.writeLock())
+            {
+                channel = new MediaChannelImpl(id, guild);
+                guildView.getMap().put(id, channel);
+                playbackCache = globalView.getMap().put(id, channel) == null;
+            }
+        }
+
+        if (api.isCacheFlagSet(CacheFlag.FORUM_TAGS))
+        {
+            DataArray tags = json.getArray("available_tags");
+            for (int i = 0; i < tags.length(); i++)
+                createForumTag(channel, tags.getObject(i), i);
+        }
+
+        channel
+                .setParentCategory(json.getLong("parent_id", 0))
+                .setFlags(json.getInt("flags", 0))
+                .setDefaultReaction(json.optObject("default_reaction_emoji").orElse(null))
+                .setDefaultSortOrder(json.getInt("default_sort_order", -1))
+                .setName(json.getString("name"))
+                .setTopic(json.getString("topic", null))
+                .setPosition(json.getInt("position"))
+                .setDefaultThreadSlowmode(json.getInt("default_thread_rate_limit_per_user", 0))
+                .setSlowmode(json.getInt("rate_limit_per_user", 0))
+                .setNSFW(json.getBoolean("nsfw"));
+
+        createOverridesPass(channel, json.getArray("permission_overwrites"));
+        if (playbackCache)
+            getJDA().getEventCache().playbackCache(EventCache.Type.CHANNEL, id);
+        return channel;
+    }
+
+    public ForumTagImpl createForumTag(IPostContainerMixin<?> channel, DataObject json, int index)
     {
         final long id = json.getUnsignedLong("id");
         SortedSnowflakeCacheViewImpl<ForumTag> cache = channel.getAvailableTagCache();
@@ -1619,10 +1669,9 @@ public class EntityBuilder
     {
         final long channelId = message.getLong("channel_id");
         final DataObject author = message.getObject("author");
-        final long authorId = author.getLong("id");
 
         PrivateChannelImpl channel = (PrivateChannelImpl) getJDA().getPrivateChannelById(channelId);
-        boolean isAuthorSelfUser = authorId == getJDA().getSelfUser().getIdLong();
+        boolean isRecipient = !author.getBoolean("bot"); // bots cannot dm other bots
         if (channel == null)
         {
             DataObject channelData = DataObject.empty()
@@ -1630,13 +1679,13 @@ public class EntityBuilder
 
             //if we see an author that isn't us, we can assume that is the other side of this private channel
             //if the author is us, we learn no information about the user at the other end
-            if (!isAuthorSelfUser)
+            if (isRecipient)
                 channelData.put("recipient", author);
 
             //even without knowing the user at the other end, we can still construct a minimal channel
             channel = (PrivateChannelImpl) createPrivateChannel(channelData);
         }
-        else if (channel.getUser() == null && !isAuthorSelfUser)
+        else if (channel.getUser() == null && isRecipient)
         {
             //In this situation, we already know the channel
             // but the message provided us with the recipient

@@ -39,6 +39,7 @@ import javax.annotation.Nonnull;
  *     <li>{@link VoiceChannel}</li>
  *     <li>{@link StageChannel}</li>
  *     <li>{@link ForumChannel}</li>
+ *     <li>{@link MediaChannel}</li>
  * </ul>
  */
 public interface IWebhookContainerUnion extends IWebhookContainer
@@ -47,7 +48,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      * Casts this union to a {@link TextChannel}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * TextChannel channel = union.asTextChannel();
@@ -69,7 +70,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      * Casts this union to a {@link NewsChannel}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * NewsChannel channel = union.asNewsChannel();
@@ -91,7 +92,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      * Casts this union to a {@link ForumChannel}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * ForumChannel channel = union.asForumChannel();
@@ -110,10 +111,32 @@ public interface IWebhookContainerUnion extends IWebhookContainer
     ForumChannel asForumChannel();
 
     /**
+     * Casts this union to a {@link MediaChannel}.
+     * This method exists for developer discoverability.
+     *
+     * <p>Note: This is effectively equivalent to using the cast operator:
+     * <pre><code>
+     * //These are the same!
+     * MediaChannel channel = union.asMediaChannel();
+     * MediaChannel channel2 = (MediaChannel) union;
+     * </code></pre>
+     *
+     * You can use {@link #getType()} to see if the channel is of type {@link ChannelType#MEDIA} to validate
+     * whether you can call this method in addition to normal instanceof checks: <code>channel instanceof MediaChannel</code>
+     *
+     * @throws IllegalStateException
+     *         If the channel represented by this union is not actually a {@link MediaChannel}.
+     *
+     * @return The channel as a {@link MediaChannel}
+     */
+    @Nonnull
+    MediaChannel asMediaChannel();
+
+    /**
      * Casts this union to a {@link net.dv8tion.jda.api.entities.channel.attribute.IThreadContainer}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * IThreadContainer channel = union.asThreadContainer();
@@ -134,7 +157,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      * Casts this union to a {@link VoiceChannel}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * VoiceChannel channel = union.asVoiceChannel();
@@ -156,7 +179,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      * Casts this union to a {@link StageChannel}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * StageChannel channel = union.asStageChannel();
@@ -182,7 +205,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      *     <li>{@link NewsChannel}</li>
      * </ul>
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * GuildMessageChannel channel = union.asGuildMessageChannel();
@@ -204,7 +227,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      * Casts this union to a {@link StandardGuildChannel}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * StandardGuildChannel channel = union.asStandardGuildChannel();
@@ -223,7 +246,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      * Casts this union to a {@link StandardGuildMessageChannel}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * StandardGuildMessageChannel channel = union.asStandardGuildMessageChannel();
@@ -242,7 +265,7 @@ public interface IWebhookContainerUnion extends IWebhookContainer
      * Casts this union to a {@link AudioChannel}.
      * This method exists for developer discoverability.
      *
-     * Note: This is effectively equivalent to using the cast operator:
+     * <p>Note: This is effectively equivalent to using the cast operator:
      * <pre><code>
      * //These are the same!
      * AudioChannel channel = union.asAudioChannel();
