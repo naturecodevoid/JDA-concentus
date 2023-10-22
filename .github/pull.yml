@@ -1,5 +1,7 @@
 version: "1"
 rules:
   - base: master
-    upstream: DV8FromTheWorld:master
+    upstream: discord-jda:master
     mergeMethod: merge
+    conflictReviewers:
+      - naturecodevoid
