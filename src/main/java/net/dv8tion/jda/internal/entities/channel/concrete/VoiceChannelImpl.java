@@ -186,7 +186,7 @@ public class VoiceChannelImpl extends AbstractStandardGuildChannelImpl<VoiceChan
             checkCanManage();
 
         Route.CompiledRoute route = Route.Channels.SET_STATUS.compile(getId());
-        DataObject body = DataObject.empty().put("status", status.isEmpty() ? null : status);
+        DataObject body = DataObject.empty().put("status", status);
         return new AuditableRestActionImpl<>(api, route, body);
     }
 
@@ -242,13 +242,5 @@ public class VoiceChannelImpl extends AbstractStandardGuildChannelImpl<VoiceChan
     {
         this.status = status;
         return this;
-    }
-
-    // -- Abstract Hooks --
-
-    @Override
-    protected void onPositionChange()
-    {
-        getGuild().getVoiceChannelsView().clearCachedLists();
     }
 }

@@ -801,15 +801,7 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
 
         locked("Interrupted while trying to invalidate chunk/sync queue", chunkSyncQueue::clear);
 
-        api.getTextChannelsView().clear();
-        api.getVoiceChannelsView().clear();
-        api.getCategoriesView().clear();
-        api.getNewsChannelView().clear();
-        api.getPrivateChannelsView().clear();
-        api.getStageChannelView().clear();
-        api.getThreadChannelsView().clear();
-        api.getForumChannelsView().clear();
-        api.getMediaChannelsView().clear();
+        api.getChannelsView().clear();
 
         api.getGuildsView().clear();
         api.getUsersView().clear();
@@ -1369,6 +1361,9 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
         handlers.put("CHANNEL_CREATE",                         new ChannelCreateHandler(api));
         handlers.put("CHANNEL_DELETE",                         new ChannelDeleteHandler(api));
         handlers.put("CHANNEL_UPDATE",                         new ChannelUpdateHandler(api));
+        handlers.put("ENTITLEMENT_CREATE",                     new EntitlementCreateHandler(api));
+        handlers.put("ENTITLEMENT_UPDATE",                     new EntitlementUpdateHandler(api));
+        handlers.put("ENTITLEMENT_DELETE",                     new EntitlementDeleteHandler(api));
         handlers.put("GUILD_AUDIT_LOG_ENTRY_CREATE",           new GuildAuditLogEntryCreateHandler(api));
         handlers.put("GUILD_BAN_ADD",                          new GuildBanHandler(api, true));
         handlers.put("GUILD_BAN_REMOVE",                       new GuildBanHandler(api, false));

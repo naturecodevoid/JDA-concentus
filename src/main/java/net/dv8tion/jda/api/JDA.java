@@ -37,6 +37,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.Route;
 import net.dv8tion.jda.api.requests.restaction.*;
+import net.dv8tion.jda.api.requests.restaction.pagination.EntitlementPaginationAction;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.MiscUtil;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -71,7 +72,7 @@ import java.util.regex.Matcher;
  *
  * @see JDABuilder
  */
-public interface JDA extends IGuildChannelContainer
+public interface JDA extends IGuildChannelContainer<Channel>
 {
     /**
      * Represents the connection status of JDA and its Main WebSocket.
@@ -1478,17 +1479,6 @@ public interface JDA extends IGuildChannelContainer
         return getScheduledEventCache().getElementsByName(name, ignoreCase);
     }
 
-    @Nullable
-    @Override
-    default <T extends Channel> T getChannelById(@Nonnull Class<T> type, long id)
-    {
-        Checks.notNull(type, "Class");
-        Channel channel = getPrivateChannelById(id);
-        if (channel != null)
-            return type.isInstance(channel) ? type.cast(channel) : null;
-        return IGuildChannelContainer.super.getChannelById(type, id);
-    }
-
     /**
      * {@link net.dv8tion.jda.api.utils.cache.SnowflakeCacheView SnowflakeCacheView} of
      * all cached {@link PrivateChannel PrivateChannels} visible to this JDA session.
@@ -1893,6 +1883,16 @@ public interface JDA extends IGuildChannelContainer
     @Nonnull
     @CheckReturnValue
     RestAction<ApplicationInfo> retrieveApplicationInfo();
+
+    /**
+     * A {@link net.dv8tion.jda.api.requests.restaction.pagination.PaginationAction PaginationAction} implementation
+     * which allows you to {@link Iterable iterate} over {@link Entitlement}s that are applicable to the logged in application.
+     *
+     * @return {@link EntitlementPaginationAction EntitlementPaginationAction}
+     */
+    @Nonnull
+    @CheckReturnValue
+    EntitlementPaginationAction retrieveEntitlements();
 
     /**
      * Configures the required scopes applied to the {@link #getInviteUrl(Permission...)} and similar methods.
